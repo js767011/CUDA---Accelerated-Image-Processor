@@ -135,9 +135,15 @@ Image applyGaussianBlur(const Image& input) {
   return output;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
   std::string inputFile = "input.ppm";
   std::string outputFile = "output_blurred.ppm";
+
+  //parse command line for number of passes, default to 10
+  int numPasses = 10;
+  if (argc > 1) {
+    numPasses = std::atoi(argv[1]);
+  }
 
   //ios::binary -> tells OS to read the file as raw bytes
   //ios::ate -> stands for "at the end"; basically tells OS to open file and jump to the last byte of the file
@@ -164,7 +170,7 @@ int main() {
 
   //to ensure that the image is truly blurred, going to run the algo 10 times
   Image blurredImg = img;
-  for (int i = 0; i < 30; ++i) {
+  for (int i = 0; i < numPasses; ++i) {
     blurredImg = applyGaussianBlur(blurredImg);
     std::cout << "Gaussian Blur applied " << i+1 << " times" << std::endl;
   }
@@ -175,6 +181,14 @@ int main() {
   std::chrono::duration<double, std::milli> duration = end - start;
 
   std::cout << "CPU compute time: " << duration.count() << " ms" << std::endl;
+
+  //append results to a csvFile
+  std::ofstream csvFile("benchmark_cpu.csv", std::ios::app); // std::ios::app means "append"
+    if (csvFile) {
+      //write the number of passes and the time separated by a comma
+      csvFile << numPasses << "," << duration.count() << "\n";
+      csvFile.close();
+    }
 
   std::cout << "Saving image..." << std::endl;
   writePPM(outputFile, blurredImg);
